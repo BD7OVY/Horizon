@@ -1,9 +1,9 @@
 {
   "ai": {
-    "provider": "deepseek",
-    "model": "deepseek-v4-flash",
-    "base_url": "https://api.deepseek.com",
-    "api_key_env": "DEEPSEEK_API_KEY",
+    "provider": "doubao",
+    "model": "doubao-pro-32k",
+    "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+    "api_key_env": "DOUBAO_API_KEY",
     "temperature": 0.3,
     "max_tokens": 8192,
     "throttle_sec": 1,
