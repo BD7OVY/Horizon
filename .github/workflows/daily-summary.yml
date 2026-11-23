@@ -1,0 +1,54 @@
+name: Daily Horizon Summary
+
+on:
+  schedule:
+    # GitHub 定时任务用 UTC。23:00 UTC ≈ 北京时间次日 07:00
+    # 官方模板故意设早一点，用来抵消 GitHub 队列延迟
+    - cron: '0 23 * * *'
+  workflow_dispatch:      # 允许在 Actions 页面手动点一次测试
+
+jobs:
+  daily-summary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write     # 需要把简报提交到 gh-pages 分支
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.26"
+
+      - name: Install dependencies
+        run: uv sync
+
+      # 用我们改好的 AI 3 源配置覆盖默认配置
+      - name: Prepare GitHub Actions config
+        run: cp data/config.github.json data/config.json
+
+      - name: Run Horizon
+        env:
+          # 只需在仓库 Settings → Secrets → Actions 里加这一条
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: uv run horizon --hours 24
+
+      - name: Set current date as environment variable
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          keep_files: true          # 保留历史简报
+          commit_message: "📝 Daily Summary: ${{ env.DATE }}"
+          publish_branch: gh-pages
+          enable_jekyll: true
